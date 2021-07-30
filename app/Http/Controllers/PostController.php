@@ -17,6 +17,13 @@ class PostController extends Controller
     public function index()
     {
         $allPosts = $this->postService->getAllPosts();
+
+        if (!$allPosts) {
+            return [
+                'message' => 'There are no posts'
+            ];
+        }
+
         return $allPosts;
     }
 
@@ -48,7 +55,7 @@ class PostController extends Controller
 
         if (!$post) {
             return [
-                'message' => 'Something went wrong'
+                'message' => "Post doesn't exist"
             ];
         }
 
@@ -79,7 +86,7 @@ class PostController extends Controller
 
         if (!$result) {
             return [
-                'message' => 'Something went wrong'
+                'message' => "Post doesn't exist"
             ];
         }
 
