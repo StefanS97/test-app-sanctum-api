@@ -4,66 +4,54 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
-class AuthController extends Controller
+class AuthController extends BaseController
 {
     public function register(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|string|unique:users,email',
-            'password' => 'required|string|confirmed'
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|confirmed',
         ]);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password'])
-        ]);
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error', $validator->errors());
+        }
 
-        $token = $user->createToken('AppToken')->plainTextToken;
+        $input = $request->all();
+        $input['password'] = Hash::make($input['password']);
+        $user = User::create($input);
+        $success['token'] = $user->createToken('AppToken')->plainTextToken;
+        $success['name'] = $user->name;
 
-        $response = [
-            'user' => $user,
-            'token' => $token
-        ];
-
-        return response($response, 201);
+        return $this->sendResponse($success, 'User registered successfully');
     }
 
     public function login(Request $request)
     {
-        $validated = $request->validate([
-            'email' => 'required|string',
-            'password' => 'required|string'
-        ]);
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            $user = Auth::user();
+            $success['token'] = $user->createToken('AppToken')->plainTextToken;
+            $success['name'] = $user->name;
 
-        $user = User::where('email', $validated['email'])->first();
-
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
-            return response([
-                'message' => 'Bad credits'
-            ], 401);
+            return $this->sendResponse($success, 'User logged in successfully');
+        } else {
+            return $this->sendError('Unauthorised', ['error' => 'Unauthorised']);
         }
-
-        $token = $user->createToken('AppToken')->plainTextToken;
-
-        $response = [
-            'user' => $user,
-            'token' => $token
-        ];
-
-        return response($response, 201);
     }
 
-    public function logout(Request $request)
+    public function logout()
     {
-        auth()->user()->tokens()->delete();
+        if(Auth::user()->tokens()->delete()) {
+            $success = [];
+            return $this->sendResponse($success, 'User logged out successfully');
+        } else {
+            return $this->sendError('Unauthorised', ['error' => 'Unauthorised']);
+        }
 
-        return [
-            'message' => 'Logged out'
-        ];
     }
 }

@@ -9,15 +9,15 @@ class PostService
 {
     public function getAllPosts()
     {
-        return Post::orderBy('created_at')->get();
+        return Post::all();
     }
 
-    public function storePost($validatedData)
+    public function storePost($input)
     {
         $post = Post::create([
             'user_id' => Auth::id(),
-            'title' => $validatedData['title'],
-            'description' => $validatedData['description']
+            'title' => $input['title'],
+            'description' => $input['description']
         ]);
 
         return $post;
@@ -28,20 +28,18 @@ class PostService
         return Post::find($id);
     }
 
-    public function updatePost($validatedData, $id)
+    public function updatePost($input, $post)
     {
-        $post = Post::find($id);
-
-        $post->title = $validatedData['title'];
-        $post->description = $validatedData['description'];
+        $post->title = $input['title'];
+        $post->description = $input['description'];
         $post->save();
 
         return $post;
     }
 
-    public function deletePost($id)
+    public function deletePost(Post $post)
     {
-        return Post::destroy($id);
+        return $post->delete();
     }
 
     public function searchPost($title)

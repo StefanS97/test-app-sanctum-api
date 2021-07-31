@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PostResource;
+use App\Models\Post;
 use App\Services\PostService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
-class PostController extends Controller
+class PostController extends BaseController
 {
     protected $postService;
 
@@ -17,94 +20,79 @@ class PostController extends Controller
     public function index()
     {
         $allPosts = $this->postService->getAllPosts();
-
-        if (!$allPosts) {
-            return [
-                'message' => 'There are no posts'
-            ];
-        }
-
-        return $allPosts;
+        return $this->sendResponse(PostResource::collection($allPosts), 'Posts retrieved successfully');
     }
 
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'title' => 'required|max:10',
+        $input = $request->all();
+
+        $validator = Validator::make($input, [
+            'title' => 'required|max:15',
             'description' => 'required|max:255'
         ]);
 
-        $post = $this->postService->storePost($validatedData);
-
-        if (!$post) {
-            return response([
-                'message' => 'Something went wrong'
-            ], 500);
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error', $validator->errors());
         }
 
-        $response = [
-            'post' => $post
-        ];
+        $post = $this->postService->storePost($input);
 
-        return response($response, 201);
+        return $this->sendResponse(new PostResource($post), 'Post created successfully');
     }
 
     public function show($id)
     {
-        $post = $this->postService->getPost($id);
+        $result = $this->postService->getPost($id);
 
-        if (!$post) {
-            return [
-                'message' => "Post doesn't exist"
-            ];
+        if (is_null($result)) {
+            return $this->sendError('Post not found');
         }
 
-        return $post;
+        return $this->sendResponse(new PostResource($result), 'Post retrieved successfully');
     }
 
     public function update(Request $request, $id)
     {
-        $validatedData = $request->validate([
-            'title' => 'required|max:10',
+        $post = Post::find($id);
+        
+        if (!$post) {
+            return $this->sendError('Post not found');
+        }
+
+        $input = $request->all();
+        
+        $validator = Validator::make($input, [
+            'title' => 'required|max:15',
             'description' => 'required|max:255'
         ]);
 
-        $post = $this->postService->updatePost($validatedData, $id);
-
-        if (!$post) {
-            return [
-                'message' => 'Something went wrong'
-            ];
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error', $validator->errors());
         }
 
-        return $post;
+        $result = $this->postService->updatePost($input, $post);
+
+        return $this->sendResponse(new PostResource($result), 'Post  updated successfully');
     }
 
     public function destroy($id)
     {
-        $result = $this->postService->deletePost($id);
+        $post = Post::find($id);
 
-        if (!$result) {
-            return [
-                'message' => "Post doesn't exist"
-            ];
+        if (!$post) {
+            return $this->sendError("Post doesn't exist");
         }
 
-        return [
-            'message' => 'Post deleted successfully'
-        ];
+        $this->postService->deletePost($post);
+
+        return $this->sendResponse([], 'Post deleted successfully');
     }
 
     public function search($title)
     {
         $result = $this->postService->searchPost($title);
 
-        if (!$result) {
-            return [
-                'message' => 'Nothing found'
-            ];
-        }
-
-        return $result;
+        return $this->sendResponse(PostResource::collection($result), 'Posts retrieved successfully');
     }
 }
