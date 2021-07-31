@@ -28,8 +28,14 @@ class PostService
         return Post::find($id);
     }
 
-    public function updatePost($input, $post)
+    public function updatePost($input, $id)
     {
+        $post = Post::find($id);
+
+        if(!$post) {
+            return null;
+        }
+
         $post->title = $input['title'];
         $post->description = $input['description'];
         $post->save();
@@ -37,8 +43,14 @@ class PostService
         return $post;
     }
 
-    public function deletePost(Post $post)
+    public function deletePost($id)
     {
+        $post = Post::find($id);
+
+        if (!$post) {
+            return null;
+        }
+
         return $post->delete();
     }
 
