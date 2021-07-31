@@ -41,18 +41,12 @@ class PostController extends BaseController
         return $this->sendResponse(new PostResource($post), 'Post created successfully');
     }
 
-    public function show($id)
+    public function show(Post $post)
     {
-        $result = $this->postService->getPost($id);
-
-        if (is_null($result)) {
-            return $this->sendError('Post not found');
-        }
-
-        return $this->sendResponse(new PostResource($result), 'Post retrieved successfully');
+        return $this->sendResponse(new PostResource($post), 'Post retrieved successfully');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Post $post)
     {
         $input = $request->all();
         
@@ -65,23 +59,15 @@ class PostController extends BaseController
             return $this->sendError('Validation Error', $validator->errors());
         }
 
-        $result = $this->postService->updatePost($input, $id);
-
-        if (!$result) {
-            return $this->sendError('Post does not exist');
-        }
+        $result = $this->postService->updatePost($input, $post);
 
         return $this->sendResponse(new PostResource($result), 'Post  updated successfully');
     }
 
-    public function destroy($id)
+    public function destroy(Post $post)
     {
-        $result = $this->postService->deletePost($id);
+        $post->delete();
 
-        if (!$result) {
-            return $this->sendError('Post does not exist');
-        }
-        
         return $this->sendResponse([], 'Post deleted successfully');
     }
 
