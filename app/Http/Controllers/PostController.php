@@ -4,17 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\PostResource;
 use App\Models\Post;
+use App\Services\NotificationService;
 use App\Services\PostService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class PostController extends BaseController
 {
     protected $postService;
+    protected $notificationService;
 
-    public function __construct(PostService $postService)
+    public function __construct(PostService $postService, NotificationService $notificationService)
     {
         $this->postService = $postService;
+        $this->notificationService = $notificationService;
     }
 
     public function index()
@@ -37,6 +41,8 @@ class PostController extends BaseController
         }
 
         $post = $this->postService->storePost($input);
+
+        $this->notificationService->sendNotificationByEmail(Auth::user(), $post);
 
         return $this->sendResponse(new PostResource($post), 'Post created successfully');
     }

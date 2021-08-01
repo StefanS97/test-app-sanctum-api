@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Post;
+use App\Notifications\PostNotification;
 use Illuminate\Support\Facades\Auth;
 
 class PostService
