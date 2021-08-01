@@ -2,8 +2,9 @@
 
 namespace App\Exceptions;
 
+use App\Http\Controllers\BaseController;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Throwable;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Handler extends ExceptionHandler
 {
@@ -34,8 +35,13 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
-        $this->reportable(function (Throwable $e) {
-            //
+        $this->renderable(function (NotFoundHttpException $e, $request) {
+            $response = [
+                'success' => false,
+                'message' => 'Post not found'
+            ];
+
+            return response()->json($response, 404);
         });
     }
 }
