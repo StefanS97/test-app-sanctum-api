@@ -32,6 +32,11 @@ class PostService
         return $post;
     }
 
+    public function deletePost(Post $post)
+    {
+        return $post->delete();
+    }
+    
     public function searchPost($title)
     {
         return Post::where('title', 'like', "%$title%")->get();

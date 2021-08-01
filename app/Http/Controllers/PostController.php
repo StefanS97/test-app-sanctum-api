@@ -66,7 +66,7 @@ class PostController extends BaseController
 
     public function destroy(Post $post)
     {
-        $post->delete();
+        $this->postService->deletePost($post);
 
         return $this->sendResponse([], 'Post deleted successfully');
     }
